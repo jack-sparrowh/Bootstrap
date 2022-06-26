@@ -1,25 +1,11 @@
 #!/usr/bin/env python
 # coding: utf-8
-
-# In[2]:
-
-
 get_ipython().run_line_magic('config', 'Completer.use_jedi=False')
-
-
-# In[3]:
-
 
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-
-from sklearn.datasets import load_iris
-
-
-# In[21]:
-
 
 class Bootstrap:
     '''
@@ -188,56 +174,3 @@ class Bootstrap:
             return 2 * self.permutation_pval_
         else:
             return self.permutation_pval_
-
-
-# In[15]:
-
-
-from scipy.stats import ttest_1samp
-da_1 = np.random.normal(0, 0.1, size=100)
-bs = Bootstrap(da_1)
-print(bs.one_sample_test(0, size=1000), ttest_1samp(da_1, 0)[1])
-
-
-# In[16]:
-
-
-from scipy.stats import ttest_ind
-da_1 = np.random.normal(0, 0.1, size=1000)
-da_2 = np.random.normal(0.001, 0.2, size=1000)
-bs = Bootstrap(da_1, da_2)
-print(bs.two_sample_test(size=1000), ttest_ind(da_1, da_2)[1])
-
-sns.kdeplot(da_1)
-sns.kdeplot(da_2)
-plt.figure()
-g = da_1.mean() - da_2.mean()
-k = bs.bs_two_sample_diff_
-sns.kdeplot(k)
-plt.vlines(g, 0, plt.yticks()[0][-1], color='red')
-
-
-# In[20]:
-
-
-da_1 = np.random.normal(0, 0.1, size=10)
-da_2 = np.random.normal(0.1, 0.2, size=10)
-bs = Bootstrap(da_1, da_2)
-print(bs.permutation_test(size=1000), ttest_ind(da_1, da_2)[1], bs.two_sample_test(size=1000))
-
-sns.kdeplot(da_1)
-sns.kdeplot(da_2)
-plt.figure()
-g = da_1.mean() - da_2.mean()
-k = bs.bs_permutation_diff_
-h = bs.bs_two_sample_diff_
-sns.kdeplot(k, color='black')
-sns.kdeplot(h)
-plt.vlines(g, 0, plt.yticks()[0][-1], color='red')
-
-
-# In[ ]:
-
-
-ttest_1samp()
-
