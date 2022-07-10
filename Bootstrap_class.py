@@ -1,21 +1,14 @@
-#!/usr/bin/env python
-# coding: utf-8
-get_ipython().run_line_magic('config', 'Completer.use_jedi=False')
-
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
-
 class Bootstrap:
     '''
     Basic statistics tests using bootstraping.
     
     Attributes
     ----------
-    data_1 : 1d numpy ndarray or pandas Series
+    data_1 : 
+        1d numpy ndarray or pandas Series
         
-    data_2 : 1d numpy ndarray or pandas Series (optional)
+    data_2 : 
+        1d numpy ndarray or pandas Series (optional)
         
     Methods
     -------
@@ -42,14 +35,73 @@ class Bootstrap:
         
         # add more statistical tests, like chi2 or F-test for anova based on bootstrap
         
+        # add pairs_bootstrap (lin_reg, corr, r^2, F, etc.)
+        
         # 'alternative' parameter wokrs okey, but 'less' and 'greater' should be added
         # as the methods will always try to get more extreme values to calculate one-sided p_value
         
         # add descriptions for methods
         
+        # add method for confidence intervals estimation
+        
+        # add method for drawing bootstrap samples without tests
+        
+        # add method for creating permutation sample w/o any test
+        
         self._data = [_data_1, _data_2]
+    
+    ######################################### BASIC METHODS ###############################################################
+    
+    def bootstrap_sample(self, size=1000, func=np.mean):
         
+        # if data_2 is present extract only data_1
+        if self._data[1].size != 0:
+            self._data = self._data[0]
+        else:
+            d = self._data[0]
+            
+        # sample from the data
+        samples = func(
+            np.random.choice(d, size=(d.shape[0], size)), 
+            axis=0
+        )
         
+        # store the result in self
+        self.bs_samples_ = samples
+        
+        # return
+        return samples
+    
+    def pair_bootstrap_sample(self, size=1000, to_return='sample'):
+        
+        # we can return sample as a set of matrices
+        # parameters a and b
+        # or both
+        
+        # create a pair bootstrap
+        a_b = np.empty(10000)
+        for i in range(10000):
+        
+            # get the indices
+            ind = np.random.choice(np.arange(lane.size), size=lane.size)
+            
+            # subsett and recalculate slope and interception
+            x_ind, y_ind = lane[ind], f_13[ind]
+            a_b[i, :] = np.polyfit(x_ind, y_ind, deg=1)
+    
+    
+    def ci(self, _CI=[2.5, 97.5], *args):
+        
+        row = self._data.shape[0]
+        variable = np.empty((row, len(_CI)))
+        
+        for d in self._data:
+            variable[d, :] = np.percentile(d, _CI)
+            
+        return variable
+    
+    ######################################### STATISTICS HYPOTHESES TEST ##################################################
+    
     def one_sample_test(self, one_sample_mean, size=1000, alternative='two-sided'):
             
         # if data_2 is present extract only data_1
@@ -126,7 +178,10 @@ class Bootstrap:
             return self.two_sample_pval_
         
     def permutation_test(self, size=1000, alternative='two-sided'):
+        '''It assumes that the sets are identicaly distributed.'''
         
+        # alternate function could be added to calculate different test statistics than differences of something
+        # for example pearson correlation coefficient
         
         if self._data[1].size == 0:
             raise ValueError('Second data sample is empty.')
@@ -143,22 +198,31 @@ class Bootstrap:
         
         # permutate and separate the data into two sets
         # then calculate the difference between means and store the values
-        # pmd = permutated_mean_difference
-        pmd = np.empty(size)
         
-        #### THIS IS THE WAY TO DO IT
-        # perm_data = np.array([np.random.permutation(con) for _ in range(10000)])
+        # perm is a matrix of shape size X cds.size
+        perm = np.array([np.random.permutation(cds) for _ in range(size)])
+        
+        # separate the data
+        perm_1, perm_2 = perm[:, :d_1.shape[0]], perm[:, d_1.shape[0]:]
+        
+        # calculate and store the difference in means
+        # pmd = permutation_mean_difference
+        pmd = perm_1.mean(axis=1) - perm_2.mean(axis=1)
+        
         ####
-        
-        for i in range(size):
-            # permutate the cds set
-            perm = np.random.permutation(cds)
-            
-            # separate
-            perm_reshaped = perm.reshape(-1, 2) # <--- it only supports arrays of the same shape, that can be split in half
-            
-            # calculate and store the difference in means         
-            pmd[i] = np.diff(perm_reshaped.mean(axis=0))
+        # worth checking if doing it as np.diff(perm.reshape(size, int(cds.size * 0.5), 2).mean(axis=1) if d1.size == d2.size
+        # is faster than what's above
+        ####
+
+        #for i in range(size):
+        #    # permutate the cds set
+        #    perm = np.random.permutation(cds)
+        #    
+        #    # separate
+        #    perm_reshaped = perm.reshape(-1, 2) # <--- it only supports arrays of the same shape, that can be split in half
+        #    
+        #    # calculate and store the difference in means         
+        #    pmd[i] = np.diff(perm_reshaped.mean(axis=0))
             
         # store the differences
         self.bs_permutation_diff_ = pmd
