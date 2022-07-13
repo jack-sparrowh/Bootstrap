@@ -95,8 +95,8 @@ class Bootstrap:
         row = self._data.shape[0]
         variable = np.empty((row, len(_CI)))
         
-        for d in self._data:
-            variable[d, :] = np.percentile(d, _CI)
+        for i, d in enumerate(self._data):
+            variable[i, :] = np.percentile(d, _CI)
             
         return variable
     
