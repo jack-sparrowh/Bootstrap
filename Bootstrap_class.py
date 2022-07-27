@@ -45,18 +45,20 @@ class Bootstrap:
         tmp_data = []
         for data in [_data_1, _data_2]:
             if np.isnan(data).any():
+                # store the data as bool values where nan = true
+                nan_bool = np.isnan(data).flatten()
                 if nans == 'drop':
                     # drop the nan values
-                    data = np.delete(data, np.isnan(data).flatten())
+                    data = np.delete(data, nan_bool)
                 elif nans == 'mean':
                     # impute using mean value
-                    data[np.isnan(data)] = np.delete(data, np.isnan(data).flatten()).mean()
+                    data[np.isnan(data)] = np.delete(data, nan_bool).mean()
                 elif nans == 'median':
                     # impute using median value
-                    data[np.isnan(data)] = np.median(np.delete(data, np.isnan(data).flatten()))
-                elif nans == 'most frequent':
+                    data[np.isnan(data)] = np.median(np.delete(data, nan_bool))
+                elif nans == 'most_frequent':
                     # get unique and count vectors
-                    unique, count = np.unique(np.delete(data, np.isnan(data).flatten()), return_counts=True)
+                    unique, count = np.unique(np.delete(data, nan_bool), return_counts=True)
                     # impute with the most frequent value
                     data[np.isnan(data)] = unique[count.max()]
             tmp_data.append(data)
