@@ -22,16 +22,52 @@ class Bootstrap:
         Calculate p-value comparing data_1 and data_2 mean values.
     '''
     
-    def __init__(self, _data_1, _data_2=np.empty(0)):
+    def __init__(self, _data_1, _data_2=np.empty(0), nans='drop'):
+        
+        # check if user has imported needed libraries to run the code
+        import sys
+        modulename = ['numpy', 'pandas']
+        for module in modulename:
+            if module not in sys.modules:
+                raise ImportError(f'You have not imported the {module} module.')
+        
+        # class is based on numpy, thus check the type and convert to ndarray
+        if isinstance(_data_1, (pd.DataFrame, pd.Series, list)) or\
+           isinstance(_data_2, (pd.DataFrame, pd.Series, list)):
+            _data_1, _data_2 = np.array(_data_1), np.array(_data_2)
+        
+        # data must be 1-dimentional
+        if ((_data_1.ndim > 1) and (1 not in _data_1.shape)) or\
+           ((_data_2.ndim > 1) and (1 not in _data_2.shape)):
+            raise ValueError('Data must be 1-dimentional.')
+        
+        # check for nans and proceed based on input
+        tmp_data = []
+        for data in [_data_1, _data_2]:
+            if np.isnan(data).any():
+                if nans == 'drop':
+                    # drop the nan values
+                    data = np.delete(data, np.isnan(data).flatten())
+                elif nans == 'mean':
+                    # impute using mean value
+                    data[np.isnan(data)] = np.delete(data, np.isnan(data).flatten()).mean()
+                elif nans == 'median':
+                    # impute using median value
+                    data[np.isnan(data)] = np.median(np.delete(data, np.isnan(data).flatten()))
+                elif nans == 'most frequent':
+                    # get unique and count vectors
+                    unique, count = np.unique(np.delete(data, np.isnan(data).flatten()), return_counts=True)
+                    # impute with the most frequent value
+                    data[np.isnan(data)] = unique[count.max()]
+            tmp_data.append(data)
+        
+        # if everything is ok store the data
+        self._data = tmp_data
         
         # here is a place for the proper code that is yet to be added
         # as of now pd.Series data types will not work properly or at all.
         # also the part for dealing with nans based on imputing method should be added
-        # add code for checking if all modules are imported:
-            # import sys
-            # modulename = 'datetime'
-            # if modulename not in sys.modules:
-            #     print(f'You have not imported the {modulename} module')
+        
         
         # add more statistical tests, like chi2 or F-test for anova based on bootstrap
         
@@ -47,8 +83,6 @@ class Bootstrap:
         # add method for drawing bootstrap samples without tests
         
         # add method for creating permutation sample w/o any test
-        
-        self._data = [_data_1, _data_2]
     
     ######################################### BASIC METHODS ###############################################################
     
@@ -56,8 +90,6 @@ class Bootstrap:
         
         # if data_2 is present extract only data_1
         if self._data[1].size != 0:
-            self._data = self._data[0]
-        else:
             d = self._data[0]
             
         # sample from the data
@@ -77,6 +109,7 @@ class Bootstrap:
         # we can return sample as a set of matrices
         # parameters a and b
         # or both
+        # add pairs_bootstrap (lin_reg, corr, r^2, F, etc.)
         
         # create a pair bootstrap
         a_b = np.empty(10000)
@@ -106,8 +139,6 @@ class Bootstrap:
             
         # if data_2 is present extract only data_1
         if self._data[1].size != 0:
-            self._data = self._data[0]
-        else:
             d = self._data[0]
         
         # transform the data
