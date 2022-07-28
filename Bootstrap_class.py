@@ -60,7 +60,7 @@ class Bootstrap:
                     # get unique and count vectors
                     unique, count = np.unique(np.delete(data, nan_bool), return_counts=True)
                     # impute with the most frequent value
-                    data[np.isnan(data)] = unique[count.max()]
+                    data[np.isnan(data)] = unique[count.argmax()]
             tmp_data.append(data)
         
         # if everything is ok store the data
